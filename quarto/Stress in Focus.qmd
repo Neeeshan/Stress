@@ -1,0 +1,435 @@
+---
+title: "Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels"
+author:
+    name: "Abdullaha Al Mamun"
+    email: "aalmamun.umich@gmail.com"
+    affiliation: "Chittagong Medical College"
+toc: true
+fontsize: 12pt
+format: html
+---
+
+## Abstract
+
+#### Objective:
+
+This cross-sectional study quantifies the prevalence of perceived psychological distress among students at the University of Chittagong and examines demographic and academic factors associated with elevated stress.
+
+#### Methods:
+
+Data were collected from a representative student sample using the Kessler Psychological Distress Scale (K10) and a structured questionnaire; analyses included descriptive statistics, chi-square tests, and multivariable logistic regression.
+
+#### Results:
+
+A substantial proportion of students reported elevated distress with clear associations between stress and year of study, academic performance (CGPA), class attendance, workload, financial concerns, relationship issues, family responsibilities, and diagnosed medical illness. Multivariable modeling identified fourth-year status, poor CGPA, relationship issues, family responsibilities, and diagnosed medical illness. Multivariable modeling identified fourth-year status, poor CGPA, relationship issues, family responsibilities, and diagnosed disease as independent predictors.
+
+#### Conclusion:
+
+Conclusion: The findings suggest an urgent need for targeted, culturally sensitive mental health interventions at the university level to mitigate stress and promote academic success.
+
+##### *Keywords:*
+
+*perceived stress; university students; Kessler K10; prevalence; academic stress.*
+
+## 1. Introduction
+
+Perceived psychological distress among university students is a pervasive public-health concern with well-documented implications for academic performance, physical health, and long-term well-being. University students face a complex interplay of academic workload, financial pressures, social transitions, and personal responsibilities that can elevate stress to clinically meaningful levels. International evidence highlights heterogeneous prevalence estimates and identifies academic performance, year of study, and socio-economic factors as consistent correlates of distress. This study documents the prevalence and correlates of perceived stress at the University of Chittagong and aims to inform institution-level strategies for prevention and support.
+
+## 2. Objectives
+
+To estimate the prevalence of perceived psychological distress among students at the University of Chittagong.
+
+To identify demographic, academic, and health-related risk factors associated with elevated distress.
+
+To provide evidence-based recommendations for targeted mental-health interventions within the university setting.
+
+## 3. Materials and Methods
+
+### 3.1 Study design and population
+
+This cross-sectional study surveyed undergraduate and postgraduate students enrolled at the University of Chittagong. A sample size was calculated to detect prevalence with 95% confidence and allowance for non-response; the final analytic sample comprised respondents who completed the K10 and the study questionnaire.
+
+### 3.2 Instruments and measures
+
+Perceived psychological distress was measured using the validated Kessler 10 (K10) psychological distress scale. K10 scores were categorized as: no stress (\<20), mild (20–24), moderate (25–29), and severe (30–50). Other study variables included sociodemographic factors (age, gender, year of study), academic indicators (CGPA, attendance), and contextual stressors (academic workload, financial concerns, relationship issues, family responsibilities, assignment/thesis pressure, and health concerns). Operational definitions are provided for each variable.
+
+### 3.3 Data collection
+
+Data were collected using an online bilingual (Bengali/English) self-administered questionnaire deployed via KoboToolbox between June 7 and July 3, 2024. A pilot test (n = 40) preceded the main survey to validate comprehension and timing; minor wording adjustments were made based on pilot feedback. Participation was voluntary and anonymous.
+
+### 3.4 Statistical analysis
+
+Data cleaning and descriptive statistics (means, standard deviations, frequencies, and percentages) were performed before inferential analyses. Bivariate associations were evaluated with Pearson’s chi-square tests and t-tests where appropriate. Variables associated with stress in bivariate testing were considered for multivariable logistic regression to estimate adjusted odds ratios (ORs) with 95% confidence intervals (CIs). Statistical significance was set at p \< 0.05. Specify the software and version you used (e.g., R version 4.5.2)
+
+### 3.5 Ethical considerations
+
+Although formal IRB approval was not obtained before data collection, the study adhered to accepted ethical principles: informed consent was obtained verbally, participation was voluntary, responses were anonymous, and data were used solely for research purposes. Include your institution’s retrospective ethics statement or IRB approval if obtained subsequently.
+
+## 4. Results
+
+#### 4.1 Load Packages
+
+Here, we use some packages for our work.
+
+```{r}
+#| message: false
+library(tidyverse)
+library(gtsummary)
+library(gt)
+library(gridExtra)
+library(cowplot)
+library(ggpubr)
+library(naniar)
+```
+
+#### 4.2 Load Data
+
+To handle missing data in our dataset, we first load the dataset and check for missing values using appropriate functions. Then, apply necessary coding and modifications to ensure the dataset is clean and ready for analysis. (echo & eval = false)
+
+```{r}
+#| message: false
+#| echo: false
+#| eval: false
+
+# Read Data
+
+Stress <- read.csv("../data/Stress_in_Focus.csv")
+
+# 1. Dimension of a dataset, rows and columns
+
+dim(Stress)
+nrow(Stress)
+ncol(Stress)
+
+# 2. Show column names (Variables Name)
+
+names(Stress)
+
+# 3. Check data structure of every variables
+
+str(Stress)
+glimpse(Stress) #Best
+
+# 4. Check for missing value
+
+is.na(Stress) 
+sum(is.na(Stress))
+
+# 4a. Visualize missing data with `naniar`
+
+miss_var_which(Stress)
+miss_var_which(Stress)
+pct_miss_var(Stress)
+gg_miss_var(Stress) # Best
+vis_miss(Stress)    # Also very good one
+
+# 5. Check for any duplicate value
+
+duplicated(Stress)
+sum(duplicated(Stress))
+
+# 6. Examine first few row
+
+head(Stress, n = 10)
+
+# 6. Examine last few row
+
+tail(Stress, n = 10)
+
+# 7. Summarize data
+
+summary(Stress)
+
+# 8. Modification from character or factor
+
+Stress <- Stress |>
+  mutate_if(is.character, as.factor)
+
+glimpse(Stress) # Check data structure after conversion
+
+
+# 9. Numeric Data
+# integer => Frequency / Percentage  ~ Discrete 
+# double => Unit / Fraction / Decimal ` ~ Continuous 
+
+# 9a. Mean
+
+Stress$Age
+
+min(Stress$Age)
+max(Stress$Age)
+Range <- max(Stress$Age) - min(Stress$Age)
+Range
+mean(Stress$Age)
+sd(Stress$Age)
+
+# 9b. Median Way
+
+median(Stress$Age)
+quantile(Stress$Age, 0.25)
+quantile(Stress$Age, 0.75)
+inter_quartile_range <- quantile(Stress$Age, 0.75) - quantile(Stress$Age, 0.25)
+inter_quartile_range
+
+
+# 10. Categorical Data (Factor ~ fct)
+# 3 types => Dichotomous, Nominal, and Ordinal
+
+summary(Stress$Gender)
+table(Stress$Gender) # Easy way # Count
+prop.table(table(Stress$Gender)) #Frequency fraction
+percnt <- (prop.table(table(Stress$Gender))*100) #Frequency Percent
+
+percnt
+
+
+# 11. Converting Ordinal Categorical Values to Numeric in R
+# 2 ways for this Recoding
+# `Categorical` to `Numeric Data` 
+
+# 11a. Mutate the Variable => mutate only
+
+names(Stress)
+
+Stress <- Stress |>
+  mutate(Tired_Score = as.numeric(Tired),
+         Nervous_Score = as.numeric(Nervous),
+         Calm_Down_Score = as.numeric(Calm_Down),
+         Hopeless_Score = as.numeric(Hopeless),
+         Restless_Score = as.numeric(Restless),
+         Sit_Still_Score = as.numeric(Sit_Still),
+         Depressed_Score = as.numeric(Depressed),
+         Effort_Score = as.numeric(Effort),
+         Cheer_Up_Score = as.numeric(Cheer_Up),
+         Worthless_Score = as.numeric(Worthless),
+         )
+
+Stress
+
+# 11b. Custom mapping => mutate (case_when) => Best for Grouping
+
+Stress |>
+  mutate(Tired_Score = case_when(
+    Tired == "None of the time" ~ "1",
+    Tired == "A little of the time" ~ "2",
+    Tired == "Some of the time" ~ "3",
+    Tired == "Most of the time" ~ "4",
+    Tired == "All of the time" ~ "5"
+    )) # Repeat for Every Variables => Tiresome
+
+
+# 12. Transforming Data into New Categorical Variable
+# Addition or Summation
+
+names(Stress)
+
+Stress <- Stress |>
+  mutate( Perceived_stress_score = Tired_Score + 
+            Nervous_Score +
+            Calm_Down_Score +
+            Hopeless_Score +
+            Restless_Score +
+            Sit_Still_Score +
+            Depressed_Score  +
+            Effort_Score +
+            Cheer_Up_Score +
+            Worthless_Score)
+
+Stress
+
+# 13. Categorization => `Numeric Data` to `Categorical`
+
+names(Stress)
+
+Stress <- Stress |>
+  mutate(Perceived_Stress = case_when(
+    Perceived_stress_score < 20 ~ "No Stress",
+    Perceived_stress_score >= 20 & Perceived_stress_score <= 24 ~ "Mild Stress",
+    Perceived_stress_score >= 24 & Perceived_stress_score <= 29 ~ "Moderate Stress",
+    Perceived_stress_score >= 30 ~ "Severe Stress"
+  ))
+
+Stress
+
+
+# 13a. Categorization => `Numeric Data` to `Dichotomous Categorical`
+
+names(Stress)
+
+Stress <- Stress |>
+  mutate(Presence_of_Stress = case_when(
+    Perceived_stress_score <= 29 ~ "No",
+    Perceived_stress_score >= 30 ~ "Yes"
+  ))
+
+Stress
+
+# 14.  Final Modification from character or factor
+
+Stress <- Stress |>
+  mutate_if(is.character, as.factor)
+
+glimpse(Stress)
+```
+
+#### 4.3 Tables
+
+Table 1. Demographic characteristics of the study participants (N=436)
+
+```{r}
+#| tbl-align: center
+#| tbl-cap: "Demographic characteristics of the study participants (N=436)"
+#| tbl-cap-location: bottom
+#| label: tbl-one
+Stress <- read.csv("../data/Stress_in_Focus.csv")
+Stress |>
+  select(2, 3, 5, 6, 7, 8) |> 
+  tbl_summary(statistic = "Age" ~ "{mean} ± ({sd})")
+```
+
+Table 2. Stress Levels and Health Concerns among the study participants (N=436)
+
+```{r}
+#| tbl-align: center
+#| tbl-cap: "Stress Levels and Health Concerns among the study participants (N=436)"
+#| tbl-cap-location: bottom
+#| label: tbl-two
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress |>
+  select(Perceived_Stress, 25:27) |>
+  tbl_summary(type = all_categorical() ~ "categorical")
+```
+
+Table 3. Association between Stress and Study Variables among participants Education Level (N=436)
+
+```{r}
+#| message: false
+#| tbl-align: center
+#| tbl-cap: "Association between Stress and Study Variables among participants Education Level (N=436)"
+#| tbl-cap-location: bottom
+#| label: tbl-three
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress |>
+  select(Perceived_Stress, 3, 5, 6, 8) |>
+  tbl_summary(by = Perceived_Stress,
+              type = all_categorical() ~ "categorical") |>
+  add_overall() |>
+  add_p(test.args = all_tests("fisher.test") ~ list(workspace = 2e9)) |>
+  bold_p(t = 0.05)
+```
+
+Table 4. Association between Stress and Study Variables among participants Education Level (N=436) (Binary options)
+
+```{r}
+#| message: false
+#| tbl-align: center
+#| tbl-cap: "Association between Stress and Study Variables among participants Education Level (N=436) (Binary options)"
+#| tbl-cap-location: bottom
+#| label: tbl-four
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress |>
+  select(Presence_of_Stress, 3, 5, 6, 8) |>
+  tbl_summary(by = Presence_of_Stress,
+              type = all_categorical() ~ "categorical") |>
+  add_overall() |>
+  add_p(test.args = all_tests("fisher.test") ~ list(workspace = 2e9)) |>
+  bold_p(t = 0.05)
+```
+
+Table 5. Association between Stress and Risk Factors among participants Education Level (N=436)
+
+```{r}
+#| message: false
+#| tbl-align: center
+#| tbl-cap: "Association between Stress and Risk Factors among participants Education Level (N=436)"
+#| tbl-cap-location: bottom
+#| label: tbl-five
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress |>
+  select(Perceived_Stress, 19:25) |>
+  tbl_summary(by = Perceived_Stress,
+              type = all_categorical() ~ "categorical") |>
+  add_overall() |>
+  add_p() |>
+  bold_p(t = 0.05)
+```
+
+Table 6. Association between Stress and Risk Factors among participants Education Level (N=436) (Binary options)
+
+```{r}
+#| message: false
+#| tbl-align: center
+#| tbl-cap: "Association between Stress and Risk Factors among participants Education Level (N=436) (Binary options)"
+#| tbl-cap-location: bottom
+#| label: tbl-six
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress |>
+  select(Presence_of_Stress, 19:25) |>
+  tbl_summary(by = Perceived_Stress,
+              type = all_categorical() ~ "categorical") |>
+  add_overall() |>
+  add_p() |>
+  bold_p(t = 0.05)
+```
+
+Table 7. Independence of Risk Factors of Stress among participants Education Level (N=436)
+
+```{r}
+#| message: false
+#| tbl-align: center
+#| tbl-cap: "Independence of Risk Factors of Stress among participants Education Level (N=436)"
+#| tbl-cap-location: bottom
+#| label: tbl-seven
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress |>
+  select(Gender, Study_Year, CGPA, Attendance, 
+         Academic_Workload, Financial_Concerns, 
+         Relationship, Family_Responsibilities,
+         Assignment_Deadline, Health_Concerns,
+         Medical_Illnesses, Perceived_Stress) |>
+  tbl_uvregression(
+    method = glm, 
+    y = Perceived_Stress,
+    method.args = list(family = binomial), # Linear => `gaussian`, # Logistic => `binomial`
+    exponentiate = TRUE,
+    pvalue_fun = ~style_pvalue(.x, digits = 2)) |>
+  bold_p(t = 0.05) 
+```
+
+Table 7. Independence of Risk Factors of Stress among participants Education Level (N=436) (Binary options)
+
+```{r}
+#| message: false
+#| tbl-align: center
+#| tbl-cap: "Independence of Risk Factors of Stress among participants Education Level (N=436) (Binary options)"
+#| tbl-cap-location: bottom
+#| label: tbl-eight
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress |>
+  select(Gender, Study_Year, CGPA, Attendance, 
+         Academic_Workload, Financial_Concerns, 
+         Relationship, Family_Responsibilities,
+         Assignment_Deadline, Health_Concerns,
+         Medical_Illnesses, Perceived_Stress) |>
+  tbl_uvregression(
+    method = glm, 
+    y = Presence_of_Stress,
+    method.args = list(family = binomial), # Linear => `gaussian`, # Logistic => `binomial`
+    exponentiate = TRUE,
+    pvalue_fun = ~style_pvalue(.x, digits = 2)) |>
+  bold_p(t = 0.05) 
+```
