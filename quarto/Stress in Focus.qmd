@@ -80,6 +80,7 @@ library(gridExtra)
 library(cowplot)
 library(ggpubr)
 library(naniar)
+library(broom)
 ```
 
 #### 4.2 Load Data
@@ -281,7 +282,9 @@ Table 1. Demographic characteristics of the study participants (N=436)
 #| tbl-cap: "Demographic characteristics of the study participants (N=436)"
 #| tbl-cap-location: bottom
 #| label: tbl-one
+
 Stress <- read.csv("../data/Stress_in_Focus.csv")
+
 Stress |>
   select(2, 3, 5, 6, 7, 8) |> 
   tbl_summary(statistic = "Age" ~ "{mean} ± ({sd})")
@@ -375,33 +378,34 @@ Stress <- read.csv("../data/Stress40variables.csv")
 
 Stress |>
   select(Presence_of_Stress, 19:25) |>
-  tbl_summary(by = Perceived_Stress,
+  tbl_summary(by = Presence_of_Stress,
               type = all_categorical() ~ "categorical") |>
   add_overall() |>
   add_p() |>
   bold_p(t = 0.05)
 ```
 
-Table 7. Independence of Risk Factors of Stress among participants Education Level (N=436)
+Table 7. Independence of Risk Factors of Stress among participants Education Level (N=436) (Binary options, 4 =\>2)
 
 ```{r}
 #| message: false
 #| tbl-align: center
-#| tbl-cap: "Independence of Risk Factors of Stress among participants Education Level (N=436)"
+#| tbl-cap: "Independence of Risk Factors of Stress among participants Education Level (N=436) (Binary options, 4 =>2)"
 #| tbl-cap-location: bottom
 #| label: tbl-seven
 
-Stress <- read.csv("../data/Stress40variables.csv")
+Stress <- read.csv("../data/Stress_Perceived_Stress_Binary.csv")
 
 Stress |>
-  select(Gender, Study_Year, CGPA, Attendance, 
+  select(has_Stress, Gender, 
+         Study_Year, CGPA, Attendance, 
          Academic_Workload, Financial_Concerns, 
          Relationship, Family_Responsibilities,
          Assignment_Deadline, Health_Concerns,
-         Medical_Illnesses, Perceived_Stress) |>
+         Medical_Illnesses) |>
   tbl_uvregression(
     method = glm, 
-    y = Perceived_Stress,
+    y = has_Stress,
     method.args = list(family = binomial), # Linear => `gaussian`, # Logistic => `binomial`
     exponentiate = TRUE,
     pvalue_fun = ~style_pvalue(.x, digits = 2)) |>
@@ -413,23 +417,820 @@ Table 7. Independence of Risk Factors of Stress among participants Education Lev
 ```{r}
 #| message: false
 #| tbl-align: center
-#| tbl-cap: "Independence of Risk Factors of Stress among participants Education Level (N=436) (Binary options)"
+#| tbl-cap: "Independence of Risk Factors of Stress among participants Education Level (N=436) (Binary options, Cat => Num)"
 #| tbl-cap-location: bottom
 #| label: tbl-eight
 
-Stress <- read.csv("../data/Stress40variables.csv")
+Stress <- read.csv("../data/Stress_Presence_of_Stress_Binary.csv")
 
 Stress |>
   select(Gender, Study_Year, CGPA, Attendance, 
          Academic_Workload, Financial_Concerns, 
          Relationship, Family_Responsibilities,
          Assignment_Deadline, Health_Concerns,
-         Medical_Illnesses, Perceived_Stress) |>
+         Medical_Illnesses, has_Stress) |>
   tbl_uvregression(
     method = glm, 
-    y = Presence_of_Stress,
+    y = has_Stress,
     method.args = list(family = binomial), # Linear => `gaussian`, # Logistic => `binomial`
     exponentiate = TRUE,
     pvalue_fun = ~style_pvalue(.x, digits = 2)) |>
   bold_p(t = 0.05) 
 ```
+
+#### 4.4 Figures for Visualization
+
+Figure 1. Distribution of Perceived Stress Levels
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Levels"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-one
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress1 <- Stress |>
+  group_by(Perceived_Stress) |>
+  summarize(AvgStress = round(mean(Perceived_stress_score), 2))
+
+ggpie(Stress1, "AvgStress","Perceived_Stress",
+      fill = "Perceived_Stress",
+      lab.pos = c("in"),
+      lab.font = c(4, "plain", "black"),
+      legend = "bottom",
+      legend.title = "Perceived Stress",
+      font.legend = c(10, "plain", "black"),
+      ticks = T,
+      main = "Distribution of Perceived Stress Levels")
+```
+
+Figure 2. Distribution of Perceived Stress Levels by Gender
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Levels by Gender"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-two
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress2 <- Stress |>
+  group_by(Perceived_Stress) |>
+  count(Gender)
+
+
+ggplot(Stress2,
+       aes(x = Perceived_Stress, y = n, 
+           fill = Gender)) +
+  geom_col() +
+  scale_color_viridis_c() +
+  facet_wrap(vars(Gender), nrow = 1) +
+  labs(x = "Perceived Stress",          
+       y = "Frequency", 
+       title = "Distribution of Stress Levels by Gender",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}") + 
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 3. Distribution of Perceived Stress Levels in Each Year of Study
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Levels in Each Year of Study"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-three
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress3 <- Stress |>
+  group_by(Perceived_Stress) |>
+  count(Study_Year)
+
+
+ggplot(Stress3,
+       aes(x = Perceived_Stress, y = n, 
+           fill = Study_Year)) +
+  geom_col() +
+  scale_color_viridis_c() +
+  scale_fill_discrete(name = "Year of Study") +
+  facet_wrap(vars(Study_Year), nrow = 2) +
+  labs(x = "Perceived Stress",          
+       y = "Frequency", 
+       title = "Distribution of Perceived Stress Levels in Each Year of Study",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}") + 
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 4. Distribution of Perceived Stress Levels among Ages with Mean Scores
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Levels among Ages with Mean Scores"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-four
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress4 <- Stress |>
+  group_by(Perceived_Stress) |>
+  count(Age)
+
+
+ggplot(Stress4,
+       aes(x = Age, y = n, 
+           fill = Perceived_Stress)) +
+  geom_col() +
+  scale_color_viridis_d() +
+  scale_fill_discrete(name = "Perceived Stress") +
+  facet_wrap(vars(Perceived_Stress), ncol = 2) +
+  labs(x = "Age",          
+       y = "Frequency", 
+       title = "Distribution of Perceived Stress Levels among Ages",
+       subtitle = "Distribution of Stress with Mean Perceived Stress Scores",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}") +
+  geom_hline(yintercept = mean(Stress$Perceived_stress_score), linetype = 4) + 
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 5. Distribution of CGPA and Perceived Stress Levels
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of CGPA and Perceived Stress Levels"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-five
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+Stress5 <- Stress |>
+  group_by(Presence_of_Stress) |>
+  count(CGPA)
+
+
+ggplot(Stress5,
+       aes(x = CGPA, y = n, 
+           fill = Presence_of_Stress)) +
+  geom_col() +
+  scale_color_viridis_d() +
+  scale_fill_discrete(name = "Presence of Stress") +
+  facet_wrap(vars(Presence_of_Stress), ncol = 2) +
+  labs(x = "CGPA",          
+       y = "Frequency", 
+       title = "Distribution of Perceived Stress Levels and CGPA",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 6. Density Plot of Perceived Stress Scores
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Density Plot of Perceived Stress Scores"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-six
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+ggplot(Stress,
+       aes(x = Perceived_stress_score, 
+           fill = Perceived_Stress)) +
+  geom_density() +
+  scale_color_viridis_d() +
+  scale_fill_discrete(name = "Perceived Stress") +
+  facet_wrap(vars(Perceived_Stress), ncol = 2) +
+  labs(x = "Perceived Stress Score",          
+       y = "Density", 
+       title = "Density Plot of Perceived Stress Scores",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 7. Distribution of Perceived Stress Scores by Gender
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Scores by Gender"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-seven
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+ggplot(Stress,
+       aes(x = Gender, y = Perceived_stress_score, 
+           fill = Gender)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_color_viridis_d() +
+  scale_fill_discrete(name = "Gender") +
+  labs(x = "Gender",          
+       y = "Perceived Stress Score", 
+       title = "Distribution of Perceived Stress Scores by Gender",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}",
+       tag = "A") +
+  geom_hline(yintercept = mean(Stress$Perceived_stress_score), linetype = 2) + 
+  stat_compare_means(label.x = 1.4, method = "t.test") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 8. Distribution of Perceived Stress Scores by Attendance
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Scores by Attendance"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-eight
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+ggplot(Stress,
+       aes(x = Attendance, y = Perceived_stress_score, 
+           fill = Attendance)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_color_viridis_d() +
+  scale_fill_discrete(name = "Attendance") +
+  labs(x = "Attendance",          
+       y = "Perceived Stress Score", 
+       title = "Distribution of Perceived Stress Scores by Attendance",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}",
+       tag = "A") +
+  geom_hline(yintercept = mean(Stress$Perceived_stress_score), linetype = 2) + 
+  stat_compare_means(label.x = 1.4, method = "t.test") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 9. Distribution of Perceived Stress Scores among Year of Study
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Scores among Year of Study"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-nine
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+p1 <- ggplot(Stress,
+       aes(x = Study_Year, y = Perceived_stress_score, 
+           fill = Study_Year)) +
+  geom_boxplot() +
+  geom_jitter() +
+  scale_color_viridis_d() +
+  scale_fill_discrete(name = "Year of Study") +
+  labs(x = "Year of Study",          
+       y = "Perceived Stress Score", 
+       title = "Distribution of Perceived Stress Scores among Year of Study",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}",
+       tag = "A") +
+  geom_hline(yintercept = mean(Stress$Perceived_stress_score), linetype = 2) + 
+  stat_compare_means(label.x = 2.5, method = "anova") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+
+p1
+```
+
+Figure 10. Distribution of Perceived Stress Scores among CGPA
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Scores among CGPA"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-ten
+
+Stress <- read.csv("../data/Stress40variables.csv")
+
+p2 <- ggplot(Stress,
+       aes(x = CGPA, y = Perceived_stress_score, 
+           fill = CGPA)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  scale_color_viridis_d() +
+  scale_fill_discrete(name = "CGPA") +
+  labs(x = "CGPA",          
+       y = "Perceived Stress Score", 
+       title = "Distribution of Perceived Stress Scores among CGPA",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}",
+       tag = "B") +
+  geom_hline(yintercept = mean(Stress$Perceived_stress_score), linetype = 2) + 
+  stat_compare_means(label.x = 2.5, method = "anova") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5),
+        legend.position = "top")
+
+p2
+```
+
+Figure 11. Distribution of Perceived Stress Scores among Year of Study vs CGPA Combined
+
+```{r}
+#| message: false
+#| echo: false
+#| fig-align: center
+#| fig-cap: "Distribution of Perceived Stress Scores among Year of Study vs CGPA Combined"
+#| fig-width: 15
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-eleven
+
+
+cowplot::plot_grid(p1, p2, nrow = 1, labels = c("A", "B"))
+```
+
+Figure 12. Correlation Heatmap: Stress vs Risk Factor
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Correlation Heatmap: Stress vs Risk Factor"
+#| fig-width: 18
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-twelve
+
+Stress6 <- read.csv("../data/Stress6_heatmap.csv")
+
+
+Stress6cor <- cor(Stress6, use = "all.obs")
+
+Stress6cor_df <-
+  as.data.frame(Stress6cor) |>
+  rownames_to_column("Stress_F") |>
+  pivot_longer(-Stress_F, 
+               names_to = "Risk_Factor", 
+               values_to = "Correlation")
+
+ggplot(Stress6cor_df,
+       aes(x = Risk_Factor, y = Stress_F, 
+           fill = Correlation)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "#000000",
+                       mid = "#b2182b",
+                       high = "#003c30",
+                       name = "Correlation",
+                       midpoint = 0,
+                       limit = c(-1, 1)) +
+  labs(x = "Risk Factors",          
+       y = "Stress", 
+       title = "Correlation Heatmap: Stress vs Risk Factor",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}",
+       tag = "A") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5)
+        )
+
+```
+
+Figure 13. Correlation Heatmap: Stress vs Risk Factor (Another)
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Correlation Heatmap: Stress vs Risk Factor"
+#| fig-width: 18
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-thirteen
+
+Stress7 <- read.csv("../data/Stress6_heatmap.csv")
+
+Stress7cor <- cor(Stress7, use = "all.obs")
+
+Stress7cor_df <-
+  as.data.frame(Stress7cor) |>
+  rownames_to_column("Stress_F") |>
+  pivot_longer(-Stress_F, 
+               names_to = "Risk_Factor", 
+               values_to = "Correlation")
+
+ggplot(Stress7cor_df,
+       aes(x = Risk_Factor, y = Stress_F, 
+           fill = Correlation)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "#dfd8d2",
+                       mid = "#00544d",
+                       high = "#5f555a",
+                       name = "Correlation",
+                       midpoint = 0,
+                       limit = c(-1, 1)) +
+  labs(x = "Risk Factors",          
+       y = "Stress", 
+       title = "Correlation Heatmap: Stress vs Risk Factor",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}",
+       tag = "B") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  hjust = 0.5))
+```
+
+Figure 14. Independence of Risk Factors of Stress among participants Education Level (in case of =\> Presence_of_Stress)
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Independence of Risk Factors of Stress among participants Education Level  (in case of => Presence_of_Stress)"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-fourteen
+
+
+Stress <- read.csv("../data/Logistic_Regression.csv")
+
+# Fit the model
+
+model1 <-  glm(has_Stress ~ Gender + 
+                 Study_Year + CGPA + Attendance +
+           Academic_Workload + Financial_Concerns +
+         Relationship + Family_Responsibilities + 
+         Assignment_Deadline + Health_Concerns +
+         Medical_Illnesses,
+         data = Stress,
+         family = "binomial")
+
+# Calculate odds ratio
+
+tidymodel1 <- tidy(model1, conf.int = TRUE,
+                   exponentiate = TRUE)
+
+# Visualization with Forest Plot 
+
+ggplot(data = tidymodel1 |> 
+         filter(term != "(Intercept)"),
+         mapping = aes (x = estimate, 
+                        y = term)) +  
+  geom_point(size = 3, color = "#00544d") +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "gray50") +
+  geom_errorbar(aes(xmin = conf.low,
+                     xmax = conf.high),
+                 width = 0.25) +
+  labs(x = "Odds Ratio (Likelihood increase)",          
+       y = "Predictor", 
+       title = "Independence of Risk Factors of Stress among participants Education Level",
+       subtitle = "Multiple Logistic Regression Results",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16,
+                                  face = "bold",
+                                  hjust = 0.5),
+        plot.subtitle = element_text(size = 12,
+                                     face = "bold",
+                                  hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 15. Independence of Risk Factors of Stress among participants Education Level (in case of =\> Perceived_Stress)
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Independence of Risk Factors of Stress among participants Education Level  (in case of => Perceived_Stress)"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-fifteen
+
+
+Stress <- read.csv("../data/Logit2.csv")
+
+# Fit the model
+
+model2 <-  glm(Has_Stress ~ Gender + 
+                 Study_Year + CGPA + Attendance +
+                 Academic_Workload + Financial_Concerns +
+                 Relationship + Family_Responsibilities + 
+                 Assignment_Deadline + Health_Concerns +
+                 Medical_Illnesses,
+               data = Stress,
+               family = "binomial")
+
+# Calculate odds ratio
+
+tidymodel2 <- tidy(model2, conf.int = TRUE,
+                   exponentiate = TRUE)
+
+tidymodel2
+
+# Visualization with Forest Plot 
+
+ggplot(data = tidymodel2 |> 
+         filter(term != "(Intercept)"),
+       mapping = aes (x = estimate, 
+                      y = term)) +  
+  geom_point(size = 3, color = "#00544d") +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "gray50") +
+  geom_errorbar(aes(xmin = conf.low,
+                    xmax = conf.high),
+                width = 0.25) +
+  labs(x = "Odds Ratio (Likelihood increase)",          
+       y = "Predictor", 
+       title = "Independence of Risk Factors of Stress among participants Education Level",
+       subtitle = "Multiple Logistic Regression Results",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  face = "bold",
+                                  hjust = 0.5),
+        plot.subtitle = element_text(size = 12,
+                                     face = "bold",
+                                     hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 16. Visualization with Forest Plot but xmax =\> limited to a fixed level
+
+(Not Recommended)
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Independence of Risk Factors of Stress among participants Education Level  (in case of => Perceived_Stress, but xmax => limited to a fixed level)"
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-sixteen
+
+
+Stress <- read.csv("../data/Logit2.csv")
+
+# Fit the model
+
+model2 <-  glm(Has_Stress ~ Gender + 
+                 Study_Year + CGPA + Attendance +
+                 Academic_Workload + Financial_Concerns +
+                 Relationship + Family_Responsibilities + 
+                 Assignment_Deadline + Health_Concerns +
+                 Medical_Illnesses,
+               data = Stress,
+               family = "binomial")
+
+# Calculate odds ratio
+
+tidymodel2 <- tidy(model2, conf.int = TRUE,
+                   exponentiate = TRUE)
+
+
+# Visualization with Forest Plot 
+
+ggplot(data = tidymodel2 |> 
+         filter(term != "(Intercept)"),
+       mapping = aes (x = estimate, 
+                      y = term)) +  
+  geom_point(size = 3, color = "#00544d") +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "gray50") +
+  geom_errorbar(aes(xmin = conf.low,
+                    xmax = 5), # Usually, xmax = conf.high
+                width = 0.25) +
+  labs(x = "Odds Ratio (Likelihood increase)",          
+       y = "Predictor", 
+       title = "Independence of Risk Factors of Stress among participants Education Level",
+       subtitle = "Multiple Logistic Regression Results",
+       caption = "Data Source: {Stress in Focus: A Cross-Sectional Study on University Students' Perceived Stress Levels}") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  face = "bold",
+                                  hjust = 0.5),
+        plot.subtitle = element_text(size = 12,
+                                     face = "bold",
+                                     hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 17. Multiple Logistic Regression Model Prediction Probability (in case of =\> Presence_of_Stress)
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Multiple Logistic Regression Model Prediction Probability (in case of => Presence_of_Stress)"
+#| fig-width: 15
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-seventeen
+
+
+Stress <- read.csv("../data/Logistic_Regression.csv")
+
+# Fit the model
+
+model3 <-  glm(has_Stress ~ Age + Gender + Study_Year +
+                 Academic_Workload + Financial_Concerns +
+                 Assignment_Deadline + Health_Concerns +
+                 Medical_Illnesses,
+               data = Stress,
+               family = "binomial")
+
+
+# Calculate odds ratio
+
+tidymodel3 <- tidy(model3, conf.int = TRUE,
+                   exponentiate = TRUE)
+
+
+# Visualization with Predicted Probabilities
+# A grid for hypothetical calculation of prediction
+
+hypodata <- expand_grid(
+  Age = seq(18, 30, by = 0.1),
+  Gender = "Male",
+  Study_Year = "Third year",
+  Academic_Workload = c("Low", "High"), # Spelling have to be same
+  Financial_Concerns = c("High"),
+  Assignment_Deadline = c("Moderate"),
+  Health_Concerns = c("Low"),
+  Medical_Illnesses = c("No")
+)
+
+# Now, Predict the Probabilities
+
+predictdata <- augment(model3, 
+                       newdata = hypodata, 
+                       type.predict = "response")
+
+
+ggplot(data = predictdata, 
+       mapping = aes (x = Age, 
+                      y = .fitted,
+                      color = Academic_Workload)) +  
+  geom_point(data = Stress |>
+               filter(Gender == "Male"),
+             aes(x = Age, y = has_Stress),
+             size =3,
+             alpha = 0.4) +
+  geom_line(linewidth = 2) +
+  scale_fill_discrete(name = "Academic Workload") +
+  labs(x = "Age (Years)",          
+       y = "Predicted Probability (0 to 1)", 
+       title = "Multiple Logistic Regression Model Prediction Probability",
+       subtitle = "Comparing High vs Low Concerns across Ages",
+       caption = "Dots = Real Student Data | Lines = Model Prediction",
+       color = "Academic Workload") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16,
+                                  face = "bold",
+                                  hjust = 0.5),
+        plot.subtitle = element_text(size = 12,
+                                     face = "bold",
+                                     hjust = 0.5),
+        legend.position = "top")
+```
+
+Figure 18. Multiple Logistic Regression Model Prediction Probability (in case of =\> Perceived_Stress)
+
+```{r}
+#| message: false
+#| fig-align: center
+#| fig-cap: "Multiple Logistic Regression Model Prediction Probability (in case of => Perceived_Stress)"
+#| fig-width: 15
+#| fig-height: 10
+#| fig-cap-location: bottom
+#| label: fig-eighteen
+
+Stress <- read.csv("../data/Logit2.csv")
+
+# Fit the model
+
+model4 <-  glm(Has_Stress ~ Age + Gender + Study_Year +
+                 Academic_Workload + Financial_Concerns +
+                 Assignment_Deadline + Health_Concerns +
+                 Medical_Illnesses,
+               data = Stress,
+               family = "binomial")
+
+# Calculate odds ratio
+
+tidymodel4 <- tidy(model4, conf.int = TRUE,
+                   exponentiate = TRUE)
+
+# Visualization with Predicted Probabilities
+# A grid for hypothetical calculation of prediction
+
+hypodata <- expand_grid(
+  Age = seq(18,30, by = 0.1),
+  Gender = "Female",
+  Study_Year = "Fourth year",
+  Academic_Workload = c("Low"), # Spelling have to be same
+  Financial_Concerns = c("Low", "High"),
+  Assignment_Deadline = c("Moderate"),
+  Health_Concerns = c("Low"),
+  Medical_Illnesses = c("No")
+)
+
+# Now, Predict the Probabilities
+
+predictdata <- augment(model4, 
+                       newdata = hypodata, 
+                       type.predict = "response")
+
+
+ggplot(data = predictdata, 
+       mapping = aes (x = Age, 
+                      y = .fitted,
+                      color = Financial_Concerns)) +  
+  geom_point(data = Stress |>
+               filter(Gender == "Male"),
+             aes(x = Age, y = Has_Stress),
+             size =3,
+             alpha = 0.4) +
+  geom_line(linewidth = 2) +
+  scale_fill_discrete(name = "Financial Concerns") +
+  labs(x = "Age (Years)",          
+       y = "Predicted Probability (0 to 1)", 
+       title = "Multiple Logistic Regression Model Prediction Probability (Female)",
+       subtitle = "Comparing High vs Low Financial Concerns across Ages",
+       caption = "Dots = Real Student Data | Lines = Model Prediction",
+       color = "Financial Concerns") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16,
+                                  face = "bold",
+                                  hjust = 0.5),
+        plot.subtitle = element_text(size = 12,
+                                     face = "bold",
+                                     hjust = 0.5),
+        legend.position = "top")
+
+```
+
+## 5. Discussion
+
+#### 5.1 Principal findings
+
+Reiterate the most important findings succinctly: prevalence of severe stress (\~20%), the disproportionate burden among final-year students and those with lower academic performance, and the role of non-academic stressors such as financial concerns and relationship issues. Emphasize the relevance to student well-being and academic success.
+
+Stress in Focus A Cross-Section…
+
+#### 5.2 Comparison with prior literature
+
+Contextualize your findings with regional and international studies, noting similarities with research from India, Nigeria, and Iran and differences with some Western cohorts; briefly discuss potential explanations (educational systems, cultural expectations, support availability).
+
+#### 5.3 Mechanisms and interpretation
+
+Offer plausible mechanisms (e.g., intensified academic obligations in final years, cumulative workload, family financial responsibilities) and the interplay between physical illness and psychological distress. Note how attendance and academic engagement may act as protective factors.
+
+Stress in Focus A Cross-Section…
+
+#### 5.4 Implications for policy and practice
+
+Provide clear, actionable recommendations: implement accessible counseling services, routine mental-health screening, stress-management training in curricula, financial literacy/aid programs, faculty training to identify and refer distressed students, and peer support networks. Emphasize culturally tailored interventions and liaison with health services.
+
+## 6. Strengths and limitations
+
+Strengths: Large sample size for a single-institution study, use of a validated instrument (K10), bilingual questionnaire, and inclusion of both academic and non-academic stressors. Limitations: Cross-sectional design precludes causal inference, reliance on self-report may introduce reporting bias, single-institution sample limits generalizability, and absence of formal IRB approval prior to data collection should be transparently acknowledged with any retrospective approvals documented.
+
+## 7. Conclusion
+
+This study documents high levels of perceived distress among students at the University of Chittagong and identifies several modifiable academic and non-academic risk factors. Universities should prioritize integrated, evidence-based mental-health strategies that combine academic support, counseling services, financial guidance, and stigma reduction to safeguard student well-being and academic outcomes. Future research should apply longitudinal designs across multiple institutions to better characterize causal pathways and intervention impacts.
