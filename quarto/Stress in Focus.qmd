@@ -964,8 +964,6 @@ model2 <-  glm(Has_Stress ~ Gender +
 tidymodel2 <- tidy(model2, conf.int = TRUE,
                    exponentiate = TRUE)
 
-tidymodel2
-
 # Visualization with Forest Plot 
 
 ggplot(data = tidymodel2 |> 
