@@ -6,7 +6,7 @@ author:
     affiliation: "Chittagong Medical College"
 toc: true
 fontsize: 12pt
-format: revealjs
+format: html
 ---
 
 ## Abstract
